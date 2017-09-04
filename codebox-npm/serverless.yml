@@ -1,0 +1,164 @@
+frameworkVersion: '>=1.20.2'
+
+plugins:
+  - environment-variables
+  - remove-storage
+  - serverless-webpack
+  - content-handling
+  - codebox-tools
+  - set-api-host
+
+service: codebox-npm
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: ${opt:stage}
+  region: ${env:CODEBOX_REGION}
+  environment:
+    admins: ${env:CODEBOX_ADMINS}
+    restrictedOrgs: ${env:CODEBOX_RESTRICTED_ORGS}
+    registry: ${env:CODEBOX_REGISTRY}
+    githubUrl: ${env:CODEBOX_GITHUB_URL}
+    githubClientId:  ${env:CODEBOX_GITHUB_CLIENT_ID}
+    githubSecret:  ${env:CODEBOX_GITHUB_SECRET}
+    bucket: ${env:CODEBOX_BUCKET}-${self:provider.stage}
+    region: ${self:provider.region}
+
+    clientId: ${env:CODEBOX_INSIGHTS_CLIENT_ID}
+    secret: ${env:CODEBOX_INSIGHTS_SECRET}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+        - "s3:GetObject"
+        - "s3:PutObject"
+        - "logs:CreateLogGroup"
+        - "logs:CreateLogStream"
+        - "logs:PutLogEvents"
+        - "sns:Publish"
+      Resource:
+        - "arn:aws:s3:::${self:provider.environment.bucket}*"
+        - "Fn::Join":
+          - ""
+          - - "arn:aws:sns:"
+            - Ref: "AWS::Region"
+            - ":"
+            - Ref: "AWS::AccountId"
+            - ":${self:service}-${opt:stage}-log"
+
+functions:
+  authorizerGithub:
+    handler: authorizerGithub.default
+
+  put:
+    handler: put.default
+    events:
+      - http:
+          path: 'registry/{name}'
+          method: put
+          authorizer: authorizerGithub
+  get:
+    handler: get.default
+    events:
+      - http:
+          path: 'registry/{name}'
+          method: get
+          authorizer: authorizerGithub
+
+  distTagsGet:
+    handler: distTagsGet.default
+    events:
+      - http:
+          path: 'registry/-/package/{name}/dist-tags'
+          method: get
+          authorizer: authorizerGithub
+  distTagsPut:
+    handler: distTagsPut.default
+    events:
+      - http:
+          path: 'registry/-/package/{name}/dist-tags/{tag}'
+          method: put
+          authorizer: authorizerGithub
+  distTagsDelete:
+    handler: distTagsDelete.default
+    events:
+      - http:
+          path: 'registry/-/package/{name}/dist-tags/{tag}'
+          method: delete
+          authorizer: authorizerGithub
+
+  userPut:
+    handler: userPut.default
+    events:
+      - http:
+          path: 'registry/-/user/{id}'
+          method: put
+
+  userDelete:
+    handler: userDelete.default
+    events:
+      - http:
+          path: 'registry/-/user/token/{token}'
+          method: delete
+          authorizer: authorizerGithub
+
+  whoamiGet:
+    handler: whoamiGet.default
+    events:
+      - http:
+          path: 'registry/-/whoami'
+          method: get
+          authorizer: authorizerGithub
+
+  tarGet:
+    handler: tarGet.default
+    events:
+      - http:
+          integration: lambda
+          authorizer: authorizerGithub
+          path: 'registry/{name}/-/{tar}'
+          method: get
+          contentHandling: CONVERT_TO_BINARY
+          request:
+            template:
+              application/json: >
+                {
+                  "name": "$input.params('name')",
+                  "tar": "$input.params('tar')"
+                }
+
+resources:
+  Resources:
+    PackageStorage:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: Private
+        BucketName: ${self:provider.environment.bucket}
+    PackageStoragePolicy:
+      Type: "AWS::S3::BucketPolicy"
+      DependsOn: "PackageStorage"
+      Properties:
+        Bucket:
+          Ref: "PackageStorage"
+        PolicyDocument:
+          Statement:
+            - Sid: DenyIncorrectEncryptionHeader
+              Effect: Deny
+              Principal: "*"
+              Action: "s3:PutObject"
+              Resource: "arn:aws:s3:::${self:provider.environment.bucket}/*"
+              Condition:
+               StringNotEquals:
+                 "s3:x-amz-server-side-encryption": AES256
+            - Sid: DenyUnEncryptedObjectUploads
+              Effect: Deny
+              Principal: "*"
+              Action: "s3:PutObject"
+              Resource: "arn:aws:s3:::${self:provider.environment.bucket}/*"
+              Condition:
+                "Null":
+                 "s3:x-amz-server-side-encryption": true
+
+custom:
+  webpackIncludeModules: true

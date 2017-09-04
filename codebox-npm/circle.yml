@@ -1,0 +1,15 @@
+machine:
+  services:
+    - docker
+  node:
+    version: 8.4.0
+
+test:
+  pre:
+    - npm run nsp
+    - npm run lint
+  override:
+    - npm run test
+    - npm run coveralls
+      # - case $CIRCLE_NODE_INDEX in 0) ./bin/integration-test latest ;; 1) ./bin/integration-test lts ;; esac:
+      #  parallel: true
