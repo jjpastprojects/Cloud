@@ -1,0 +1,71 @@
+service: aws-react-boilerpate
+
+package:
+  exclude:
+    - node_modules/dynamodb-localhost/**
+    - node_modules/serverless-dynamodb-local/**
+    - node_modules/serverless-offline/**
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  region: us-east-1
+  stage: dev
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - "arn:aws:dynamodb:us-east-1:*"
+
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  DB_PREFIX: ${file(./config.yml):${self:custom.stage}.DB_PREFIX}
+  dynamodb:  
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+      seed: true
+    seed:
+      domain:
+        sources:
+          - table: ${self:custom.DB_PREFIX}-todos
+            sources: [./offline/migrations/todo-seed.json]
+
+functions:
+  todo:
+    handler: handlers/todo/handler.todo
+    events:
+      - http:
+          method: GET
+          path: todos/getAll
+          cors: true
+
+      - http:
+          method: DELETE
+          path: todos/delete/{id}
+          cors: true
+
+      - http:
+          method: POST
+          path: todos
+          cors: true
+
+      - http:
+          method: PUT
+          path: todos/update
+          cors: true
+
+      - http:
+          method: PUT
+          path: todos/status
+          cors: true
+
+resources:
+  Resources: ${file(offline/migrations/todo.yml)}
+    

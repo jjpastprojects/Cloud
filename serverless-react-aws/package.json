@@ -1,0 +1,48 @@
+{
+  "name": "serverless-boilerplate",
+  "version": "2.0.0",
+  "description": "basic boilerplate with offline development setup",
+  "main": "index.js",
+  "dependencies": {
+    "gulp": "3.9.1",
+    "gulp-exec": "2.1.2",
+    "gulp-sequence": "0.4.6",
+    "gulp-util": "3.0.7",
+    "i": "0.3.5",
+    "webpack": "1.13.2"
+  },
+  "scripts": {
+    "preinstall": "cd web && npm install",
+    "postinstall": "cd serverless && npm install",
+    "db-setup": "cd serverless && sls dynamodb install",
+    "db-remove": "cd serverless && sls dynamodb remove",
+    "test": "mocha --compilers js:babel-register --require ./test/helpers.js --require ./test/dom.js --recursive",
+    "tdd": "npm test -- --watch",
+    "dev": "webpack-dev-server --port 3000 --devtool eval --progress --colors --hot --content-base dist",
+    "build": "webpack -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mjzone/serverless-boilerplate.git"
+  },
+  "keywords": [
+    "serverless",
+    "boilerplate",
+    "aws",
+    "offline"
+  ],
+  "author": "Manoj Fernando <manojf@99x.lk>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mjzone/serverless-boilerplate/issues"
+  },
+  "homepage": "https://github.com/mjzone/serverless-boilerplate#readme",
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "enzyme": "^2.9.1",
+    "mocha": "^3.5.0",
+    "opn": "4.0.2",
+    "react-addons-test-utils": "^15.6.0",
+    "sinon": "^3.2.1"
+  }
+}
