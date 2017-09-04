@@ -1,11 +1,7 @@
-serverless-react-boilerplate
+serverless-react-aws
 ============================
 
-[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
-[![license](https://img.shields.io/npm/l/serverless-dynamodb-local.svg)](https://opensource.org/licenses/MIT)
-[![Join the chat at https://gitter.im/99xt/serverless-react-boilerplate](https://badges.gitter.im/99xt/serverless-react-boilerplate.svg)](https://gitter.im/99xt/serverless-react-boilerplate?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-## Sample Todo App
+## Todo App
 <img width="964" alt="screen shot 2017-08-29 at 4 49 58 am" src="https://user-images.githubusercontent.com/2338919/29805880-e14eb17c-8ca9-11e7-9b3d-a171238e880c.png">
 
 ## Requirements
@@ -137,10 +133,6 @@ Your contributions are much appriciated.
 * Release v2.0.0 - Added support for serverless v1.0 and Issues #24 #25
 * Release v1.0.3 - Fixed local dynamobd get packaged for deployment
 * Release v1.0.2 - Added support for serverless@1.0.0-rc.2
-
-## Links
-* [serverless-dynamodb-local plugin](https://github.com/99xt/serverless-dynamodb-local)
-* [serverless-offline plugin](https://github.com/dherault/serverless-offline)
 
 
 ## License
